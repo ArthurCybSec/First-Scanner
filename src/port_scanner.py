@@ -1,46 +1,54 @@
-# Primeiro, avisamos ao Python que vamos usar ferramentas para conexão de rede.
-# A biblioteca 'socket' é a caixa de ferramentas padrão para isso.
 import socket
-# Agora, definimos o alvo que nosso programa vai escanear.
-# 'localhost' é um nome especial para o SEU PRÓPRIO COMPUTADOR.
-# É 100% seguro escanear a si mesmo para aprender.
-alvo = 'localhost'
+from colorama import init, Fore, Style
 
-# Apenas uma linha para deixar a saída do programa mais organizada.
-print(f"[*] Escaneando o alvo: {alvo}")
-print("-" * 30)
-# Usamos um bloco 'try...except' por segurança.
-# Ele tenta executar o código dentro do 'try'. Se der algum erro (ex: sem internet),
-# ele pula para o 'except' e mostra uma mensagem amigável, em vez de travar.
-try:
-    # Criamos uma lista com as portas mais comuns que queremos testar.
-    # 80 é para web (HTTP), 443 para web segura (HTTPS), 22 para acesso remoto (SSH), etc.
-    portas_comuns = [21, 22, 25, 80, 443, 3306, 8080]
+# Inicializa o colorama para que as cores funcionem no Windows
+init()
 
-    # Agora, criamos um loop que vai passar por cada número da nossa lista.
-    for porta in portas_comuns:
-        # Para cada porta, criamos um novo "conector" (socket).
+def scan_ports(alvo, portas):
+    """
+    Função principal que realiza a varredura de portas.
+    """
+    print(f"\n{Fore.CYAN}[*] Iniciando varredura no alvo: {alvo}{Style.RESET_ALL}")
+    print("-" * 40)
+    
+    # Loop que passa por cada porta da nossa lista
+    for porta in portas:
+        # Criamos o socket (o "conector" de rede)
+        # AF_INET = IPv4 | SOCK_STREAM = TCP
         cliente_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
-        # Definimos um tempo limite de 1 segundo. Se a porta não responder,
-        # o programa não fica travado esperando para sempre. Ele desiste e passa para a próxima.
-        cliente_socket.settimeout(1)
+        # Define um tempo limite (timeout) de 0.5 segundos
+        # Se demorar mais que isso, o script não trava e pula para a próxima
+        cliente_socket.settimeout(0.5)
         
         # AQUI A MÁGICA ACONTECE:
-        # O programa tenta se conectar ao 'alvo' na 'porta' da vez.
-        resultado = cliente_socket.connect_ex((alvo, porta))
+        # connect_ex retorna 0 se a conexão for sucesso (Porta Aberta)
+        codigo_retorno = cliente_socket.connect_ex((alvo, porta))
         
-        # Verificamos o resultado. Se for 0, significa SUCESSO! A porta está aberta.
-        if resultado == 0:
-            print(f"[+] Porta {porta}: ABERTA")
-        # Se o resultado for outro número, significa que a porta está fechada e não fazemos nada.
-        
-        # Fechamos o "conector" para liberar recursos do computador.
+        if codigo_retorno == 0:
+            # Se a porta estiver aberta, pintamos de VERDE
+            print(f"{Fore.GREEN}[+] Porta {porta}: ABERTA{Style.RESET_ALL}")
+        else:
+            # Se fechada, pintamos de VERMELHO (opcional, mas bom para visualizar)
+            print(f"{Fore.RED}[-] Porta {porta}: FECHADA{Style.RESET_ALL}")
+            
+        # Fechamos o conector para liberar memória
         cliente_socket.close()
-        # Caso algum erro tenha acontecido lá no começo, esta parte avisa o usuário.
-except Exception as e:
-    print(f"[!] Ocorreu um erro inesperado: {e}")
+    
+    print("-" * 40)
+    print(f"{Fore.CYAN}[*] Scan finalizado.{Style.RESET_ALL}")
 
-# Mensagem final para sabermos que o programa terminou seu trabalho.
-print("-" * 30)
-print("[*] Scan finalizado.")
+if __name__ == "__main__":
+    # Definição do alvo (localhost é sua própria máquina)
+    alvo = 'localhost' 
+    
+    # Lista de portas comuns para verificar:
+    # 21(FTP), 22(SSH), 80(HTTP), 443(HTTPS), 3306(MySQL), 8080(Alt Web)
+    portas_comuns = [21, 22, 25, 80, 443, 3306, 8080]
+    
+    try:
+        scan_ports(alvo, portas_comuns)
+    except KeyboardInterrupt:
+        print(f"\n{Fore.YELLOW}[!] Operação interrompida pelo usuário.{Style.RESET_ALL}")
+    except Exception as e:
+        print(f"\n{Fore.RED}[!] Erro inesperado: {e}{Style.RESET_ALL}")
