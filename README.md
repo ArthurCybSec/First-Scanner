@@ -11,3 +11,10 @@ Praticar conceitos básicos de:
 ## ▶️ Como executar
 ```bash
 python src/port_scanner.py
+## 📁 Estrutura do Projeto
+
+Port-Auditor/
+├── src/
+│   └── port_scanner.py
+├── requirements.txt
+└── README.md
